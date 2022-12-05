@@ -41,16 +41,18 @@ move 1 from 1 to 2")
         stack-desc (describe-stack (re-seq #"\d+" (last stack-lines)))
         parsed-lines (map (partial parse-stack-line stack-desc) (butlast stack-lines))
         seed-stacks (reduce #(assoc %1 %2 []) {} (:names stack-desc))
-        stacks (reduce build-stacks seed-stacks parsed-lines)
+        ;; reverse parsed lines so stacks are ordered like stacks
+        stacks (reduce build-stacks seed-stacks (reverse parsed-lines))
         procedure (map parse-procedure-line proc-lines)]
     {:stacks stacks
-     :procedure procedure ; (take 1 procedure)
+     :procedure procedure
      :stack-desc stack-desc}))
 
 (defn move-stacks [stacks move from to]
-  (let [[vals-to-move from-stack] (split-at move (stacks from))
-        to-stack (concat (reverse vals-to-move) (stacks to))]
-    (assoc stacks from from-stack to to-stack)))
+  (let [vals-to-move (reverse (take-last move (stacks from)))
+        from-stack (drop-last move (stacks from))
+        to-stack (concat (stacks to) vals-to-move)]
+    (assoc stacks from (vec from-stack) to (vec to-stack))))
 
 (defn execute-stack-procedure [{:keys [stacks procedure]}]
   (reduce (fn [s {:keys [move from to]}]
@@ -71,11 +73,13 @@ move 1 from 1 to 2")
 (clerk/table (stacks-for-table moved-stacks))
 
 (def result
-  (let [inputs (parse-input; (slurp "resources/day5")
-                         example-input
+  (let [inputs (parse-input (slurp "resources/day5")
+                          ;example-input
                          )
-        moved-stacks (execute-stack-procedure inputs)]
-   (clojure.string/join "" (map first (vals moved-stacks)))))
+        moved-stacks (execute-stack-procedure inputs)
+        ;; Lost at least an hour to lack of ordering >_<
+        ordered-stacks (map moved-stacks (:names (:stack-desc inputs)))]
+   (clojure.string/join "" (map last ordered-stacks))))
 
 (comment
   (clerk/serve! {:watch-paths ["src"]})
