@@ -35,7 +35,7 @@ move 1 from 1 to 2")
     {:move (Integer/valueOf move) :from from :to to}))
 
 (defn parse-input [input]
-  (let [[stack-string proc-string] (clojure.string/split example-input #"\n\n")
+  (let [[stack-string proc-string] (clojure.string/split input #"\n\n")
         stack-lines (clojure.string/split stack-string #"\n")
         proc-lines (clojure.string/split proc-string #"\n")
         stack-desc (describe-stack (re-seq #"\d+" (last stack-lines)))
@@ -44,25 +44,42 @@ move 1 from 1 to 2")
         stacks (reduce build-stacks seed-stacks parsed-lines)
         procedure (map parse-procedure-line proc-lines)]
     {:stacks stacks
-     :procedure procedure
+     :procedure procedure ; (take 1 procedure)
      :stack-desc stack-desc}))
 
 (defn move-stacks [stacks move from to]
   (let [[vals-to-move from-stack] (split-at move (stacks from))
         to-stack (concat (reverse vals-to-move) (stacks to))]
-;    (println "given " move from to "moving" vals-to-move "result" to-stack)
     (assoc stacks from from-stack to to-stack)))
 
 (defn execute-stack-procedure [{:keys [stacks procedure]}]
   (reduce (fn [s {:keys [move from to]}]
             (move-stacks s move from to)) stacks procedure))
 
-(def inputs (parse-input example-input))
+(def inputs (parse-input (slurp "resources/day5")
+                         ;example-input
+                         ))
+
 (def moved-stacks (execute-stack-procedure inputs))
+
+(defn stacks-for-table [stacks]
+  (mapv #(reverse (concat (stacks %) [%])) (:names (:stack-desc inputs))))
+
+; Original stacks
+(clerk/table (stacks-for-table (:stacks inputs)))
+; Result stacks
+(clerk/table (stacks-for-table moved-stacks))
+
+(def result
+  (let [inputs (parse-input; (slurp "resources/day5")
+                         example-input
+                         )
+        moved-stacks (execute-stack-procedure inputs)]
+   (clojure.string/join "" (map first (vals moved-stacks)))))
 
 (comment
   (clerk/serve! {:watch-paths ["src"]})
-  (clerk/show! "src/dayX.clj")
+  (clerk/show! "src/day5-part1.clj")
   (line-seq (io/reader (io/file "resources/dayX")))
   (describe-stack ["1" "2" "3"])
   (parse-stack-line "[N] [C]    " {:names ["1" "2" "3"], :offsets [1 5 9]})
