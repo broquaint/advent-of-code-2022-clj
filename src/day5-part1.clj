@@ -30,6 +30,10 @@ move 1 from 1 to 2")
        (update-in s [k] conj v)))
    stacks stack-entry))
 
+(defn parse-procedure-line [line]
+  (let [[move from to] (re-seq #"\d+" line)]
+    {:move move :from from :to to}))
+
 (defn parse-input [input]
   (let [[stack-string proc-string] (clojure.string/split example-input #"\n\n")
         stack-lines (clojure.string/split stack-string #"\n")
@@ -37,11 +41,11 @@ move 1 from 1 to 2")
         stack-desc (describe-stack (re-seq #"\d+" (last stack-lines)))
         parsed-lines (map (partial parse-stack-line stack-desc) (butlast stack-lines))
         seed-stacks (reduce #(assoc %1 %2 []) {} (:names stack-desc))
-        stacks (reduce build-stacks seed-stacks parsed-lines)]
+        stacks (reduce build-stacks seed-stacks parsed-lines)
+        procedure (map parse-procedure-line proc-lines)]
     {:stacks stacks
-     :procedure proc-string
-     :stack-desc stack-desc})
-  )
+     :procedure procedure
+     :stack-desc stack-desc}))
 
 (def ouptut (parse-input example-input))
 
