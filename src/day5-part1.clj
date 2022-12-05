@@ -32,7 +32,7 @@ move 1 from 1 to 2")
 
 (defn parse-procedure-line [line]
   (let [[move from to] (re-seq #"\d+" line)]
-    {:move move :from from :to to}))
+    {:move (Integer/valueOf move) :from from :to to}))
 
 (defn parse-input [input]
   (let [[stack-string proc-string] (clojure.string/split example-input #"\n\n")
@@ -47,7 +47,18 @@ move 1 from 1 to 2")
      :procedure procedure
      :stack-desc stack-desc}))
 
-(def ouptut (parse-input example-input))
+(defn move-stacks [stacks move from to]
+  (let [[vals-to-move from-stack] (split-at move (stacks from))
+        to-stack (concat (reverse vals-to-move) (stacks to))]
+;    (println "given " move from to "moving" vals-to-move "result" to-stack)
+    (assoc stacks from from-stack to to-stack)))
+
+(defn execute-stack-procedure [{:keys [stacks procedure]}]
+  (reduce (fn [s {:keys [move from to]}]
+            (move-stacks s move from to)) stacks procedure))
+
+(def inputs (parse-input example-input))
+(def moved-stacks (execute-stack-procedure inputs))
 
 (comment
   (clerk/serve! {:watch-paths ["src"]})
@@ -55,4 +66,5 @@ move 1 from 1 to 2")
   (line-seq (io/reader (io/file "resources/dayX")))
   (describe-stack ["1" "2" "3"])
   (parse-stack-line "[N] [C]    " {:names ["1" "2" "3"], :offsets [1 5 9]})
+  (move-stacks {"1" [\N \Z], "2" [\D \C \M], "3" [\P]} 1 "2" "1")
 )
