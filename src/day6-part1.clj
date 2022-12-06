@@ -5,12 +5,12 @@
 (def example-input "mjqjpqmgbljsphdztnvjfqwrcgsmlb")
 
 (def find-protocol-start
-  (let [input (slurp "resources/day6") ;example-input
+  (let [input (slurp "resources/day6")
         ]
    (loop [idx 0]
-     (let [offset (+ idx 4)
+     (let [offset (+ idx 14)
            ss (subs input idx offset)]
-       (if (= 4 (count (set ss)))
+       (if (= 14 (count (set ss)))
          offset
          (recur (+ idx 1)))))))
 
